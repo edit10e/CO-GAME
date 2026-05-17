@@ -115,7 +115,7 @@ export default function Home() {
         
         {/* ส่วนหัวแสดงชื่อแมตช์ตัวใหญ่กระชับตระการตา */}
         <div className="w-full text-center drop-shadow-lg">
-          <p className="text-3xl font-black tracking-wider text-amber-400 uppercase animate-pulse">
+          <p className="text-3xl font-black tracking-wider text-amber-400 uppercase ">
             🔥 เกมกล้าท้าเสียว 🔥
           </p>
         </div>
@@ -152,7 +152,7 @@ export default function Home() {
           </div>
 
           {/* ตราสัญลักษณ์ VS ตรงกลางจอมุมเอียง */}
-          <div className="absolute text-4xl z-30 transform -translate-y-4">
+          <div className="absolute font-bold text-4xl z-30 transform -translate-y-4">
               VS
           </div>
 
@@ -223,7 +223,7 @@ export default function Home() {
                 </div>
               ) : isPlayer1 ? (
                 /* หน้าจอสถานะรอคอยสำหรับฝั่งผู้ท้าชิง (Player 1) */
-                <div className="bg-slate-950/80 border border-slate-800 text-slate-400 font-bold text-xs tracking-wide py-3 px-6 rounded-xl backdrop-blur-md animate-pulse text-center leading-relaxed">
+                <div className=" text-white shadow-md font-bold text-2xl tracking-wide py-3 px-6  animate-pulse text-center leading-relaxed">
                   กำลังรอการตอบกลับจาก @{expectedPlayer2Name}...
                 </div>
               ) : (
