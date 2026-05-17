@@ -27,10 +27,7 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initTelegram = async () => {
       try {
-        // Dynamically import to ensure code runs ONLY on the browser client
         const { retrieveLaunchParams } = await import('@telegram-apps/sdk');
-        
-        // Cast to 'any' to bypass strict/evolving SDK signature mismatches
         const launchParams = retrieveLaunchParams() as any;
         
         setSdkData({
@@ -40,7 +37,7 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
           isReady: true,
         });
       } catch (error) {
-        console.warn("Not running inside Telegram or SDK initialization failed:", error);
+        console.warn("Not running inside Telegram context:", error);
         setSdkData((prev) => ({ ...prev, isReady: true }));
       }
     };

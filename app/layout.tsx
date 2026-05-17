@@ -3,8 +3,8 @@ import "./globals.css";
 import { TelegramProvider } from "./components/TelegramProvider";
 
 export const metadata: Metadata = {
-  title: "Co-Expose Match App",
-  description: "Secure 1v1 Telegram Game Room",
+  title: "Expose Game Arena",
+  description: "Secure Mobile 1v1 Telegram Arena",
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased bg-slate-900 text-white min-h-screen">
+      <body className="antialiased bg-slate-950 text-white min-h-screen selection:bg-emerald-500/30">
         <TelegramProvider>
           {children}
         </TelegramProvider>

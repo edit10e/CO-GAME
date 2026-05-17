@@ -7,10 +7,10 @@ export async function POST(req: Request) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
     if (!initDataRaw || !botToken) {
-      return NextResponse.json({ authorized: false, error: 'Missing parameters' }, { status: 400 });
+      return NextResponse.json({ authorized: false, error: 'Parameters missing' }, { status: 400 });
     }
 
-    // 1. Verify that this user is actually who they say they are (Telegram Validation)
+    // 1. Authenticate that data truly originated from Telegram
     const params = new URLSearchParams(initDataRaw);
     const hash = params.get('hash');
     params.delete('hash');
@@ -22,40 +22,37 @@ export async function POST(req: Request) {
     const calculatedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
 
     if (calculatedHash !== hash) {
-      return NextResponse.json({ authorized: false, error: 'Invalid signature' }, { status: 403 });
+      return NextResponse.json({ authorized: false, error: 'Crypto verification failed' }, { status: 403 });
     }
 
-    // 2. Extract the verified user profile data from Telegram
+    // 2. Decode the user parameters
     const userString = params.get('user');
     const user = userString ? JSON.parse(userString) : null;
 
     if (!user || !user.id) {
-      return NextResponse.json({ authorized: false, error: 'User profile invalid' }, { status: 400 });
+      return NextResponse.json({ authorized: false, error: 'User profiles unavailable' }, { status: 400 });
     }
 
     const currentUserId = user.id.toString();
+    const currentUsername = user.username || "";
 
-    // 3. NO-DB VERIFICATION LOGIC
-    // We expect gameId (startParam) to be formatted as "player1ID_player2ID"
-    // Example: "11111111_22222222"
+    // 3. No-DB Gatekeeping Verification Match Logic
     if (!gameId || !gameId.includes('_')) {
-      return NextResponse.json({ authorized: false, error: 'Malformed game link' }, { status: 400 });
+      return NextResponse.json({ authorized: false, error: 'Corrupt arena link structure' }, { status: 400 });
     }
 
-    const [player1Id, player2Id] = gameId.split('_');
+    const [player1Id, player2Username] = gameId.split('_');
 
-    // Check if the current user matches either allowed ID
-    if (currentUserId !== player1Id && currentUserId !== player2Id) {
+    // Block anyone who isn't Player 1 (by ID) or Player 2 (by Username)
+    if (currentUserId !== player1Id && currentUsername.toLowerCase() !== player2Username.toLowerCase()) {
       return NextResponse.json({ 
         authorized: false, 
-        error: 'You are not a player in this specific duel match.' 
+        error: 'Access Denied: This arena match lobby is private.' 
       }, { status: 403 });
     }
 
-    // Success! The user is authenticated AND authorized.
     return NextResponse.json({ authorized: true, user });
-
   } catch (error) {
-    return NextResponse.json({ authorized: false, error: 'Server error' }, { status: 500 });
+    return NextResponse.json({ authorized: false, error: 'Server authorization crash' }, { status: 500 });
   }
 }

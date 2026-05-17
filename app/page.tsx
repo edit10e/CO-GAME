@@ -10,7 +10,6 @@ export default function Home() {
   useEffect(() => {
     if (!isReady) return;
 
-    // Reject direct browser loads with missing startparams 
     if (!initDataRaw || !startParam) {
       setAuthStatus('denied');
       return;
@@ -40,10 +39,13 @@ export default function Home() {
 
   if (authStatus === 'loading') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-900">
-        <p className="text-sm font-medium text-slate-400 animate-pulse tracking-widest uppercase">
-          Verifying Player Duel Link...
-        </p>
+      <div className="flex items-center justify-center min-h-screen bg-slate-950">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+            Syncing Expose Match Data...
+          </p>
+        </div>
       </div>
     );
   }
@@ -51,43 +53,40 @@ export default function Home() {
   if (authStatus === 'denied') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-slate-950">
-        <div className="bg-red-500/10 p-4 rounded-full border border-red-500/20 mb-4">
-          ❌
+        <div className="bg-red-500/10 p-4 rounded-full border border-red-500/20 mb-4 text-xl">
+          🔒
         </div>
-        <h1 className="text-2xl font-black text-red-500 tracking-tight mb-2">Access Denied</h1>
-        <p className="text-slate-400 text-sm max-w-xs leading-relaxed">
-          This match link is secure. Only the challenger and their target opponent can enter this arena.
+        <h1 className="text-xl font-black text-red-500 tracking-tight mb-2 uppercase">Arena Guarded</h1>
+        <p className="text-slate-400 text-xs max-w-xs leading-relaxed">
+          You are not one of the designated combatants for this specific duel challenge link.
         </p>
       </div>
     );
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-4 max-w-sm mx-auto">
-      <div className="w-full bg-slate-800/60 backdrop-blur-md p-6 rounded-3xl border border-slate-700/50 shadow-2xl text-center">
-        <span className="text-[10px] font-bold tracking-widest bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full uppercase mb-4 inline-block">
-          Active Arena Room
+    <main className="flex flex-col items-center justify-center min-h-screen p-4 max-w-md mx-auto">
+      <div className="w-full bg-slate-900/40 border border-slate-800 p-6 rounded-[2.5rem] text-center shadow-2xl backdrop-blur-md">
+        <span className="text-[10px] font-black tracking-widest bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full uppercase mb-4 inline-block border border-emerald-500/20">
+          Match Verified
         </span>
         
-        <h1 className="text-xl font-extrabold tracking-wide text-white mb-1">
-          VS Duel Match
+        <h1 className="text-2xl font-black tracking-tight text-white mb-6">
+          EXPOSE GAME ROOM
         </h1>
-        <p className="text-xs text-slate-500 mb-6">
-          Room ID: <span className="font-mono text-slate-300 bg-slate-900 px-1.5 py-0.5 rounded">{startParam}</span>
-        </p>
 
-        <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-700/40 mb-6 flex items-center justify-between text-left">
+        <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-left mb-6 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Authenticated as</p>
-            <p className="text-sm font-bold text-emerald-400">@{user?.username || 'Anonymous Player'}</p>
+            <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-0.5">Player Active</p>
+            <p className="text-sm font-bold text-slate-200">@{user?.username || 'player'}</p>
           </div>
-          <div className="h-2.5 w-2.5 bg-emerald-500 rounded-full animate-ping" />
+          <div className="h-2 w-2 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
         </div>
         
-        {/* Mobile First Web Game Engine/Canvas mounting space */}
-        <div className="aspect-square w-full bg-slate-950 rounded-2xl border border-slate-800 flex flex-col items-center justify-center p-4">
-          <p className="text-sm font-bold text-slate-400 tracking-wide mb-1">Waiting for opponent...</p>
-          <p className="text-xs text-slate-600">Game engine initializes here</p>
+        {/* Game Canvas Mounting Screen Box Container */}
+        <div className="aspect-4/5 w-full bg-slate-950 rounded-2xl border border-slate-800/80 flex flex-col items-center justify-center p-4">
+          <p className="text-xs font-bold text-slate-400 animate-pulse">Lobby Setup Complete</p>
+          <p className="text-[10px] text-slate-600 mt-1 font-mono">Mount your game canvas engine layer here</p>
         </div>
       </div>
     </main>
