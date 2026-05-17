@@ -33,21 +33,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ authorized: false, error: 'User profiles unavailable' }, { status: 400 });
     }
 
-    const currentUserId = user.id.toString();
-    const currentUsername = user.username || "";
-
     // 3. No-DB Gatekeeping Verification Match Logic
     if (!gameId || !gameId.includes('_')) {
       return NextResponse.json({ authorized: false, error: 'Corrupt arena link structure' }, { status: 400 });
     }
-
     const [player1Id, player2Username] = gameId.split('_');
+    const currentUserId = user.id.toString();
+    const currentUsername = user.username || "";
 
-    // Block anyone who isn't Player 1 (by ID) or Player 2 (by Username)
-    if (currentUserId !== player1Id && currentUsername.toLowerCase() !== player2Username.toLowerCase()) {
-      return NextResponse.json({ 
-        authorized: false, 
-        error: 'Access Denied: This arena match lobby is private.' 
+    // FIX: Make sure BOTH players can enter!
+    const isPlayer1 = currentUserId === player1Id;
+    const isPlayer2 = currentUsername.toLowerCase() === player2Username.toLowerCase();
+
+    if (!isPlayer1 && !isPlayer2) {
+      return NextResponse.json({
+        authorized: false,
+        error: 'Access Denied: This arena match lobby is private.'
       }, { status: 403 });
     }
 
