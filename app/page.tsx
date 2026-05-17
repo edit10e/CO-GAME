@@ -11,12 +11,13 @@ export default function Home() {
   const { isReady, user, startParam, initDataRaw } = useTelegram();
   const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'denied'>('loading');
   
-  // สถานะแชร์ร่วมกัน (จะถูก sync ผ่าน API)
   const [matchState, setMatchState] = useState<'pending' | 'accepted' | 'rejected' | 'expired'>('pending');
   const [p1Choice, setP1Choice] = useState<string | null>(null);
   const [p2Choice, setP2Choice] = useState<string | null>(null);
   const [finalGame, setFinalGame] = useState<string | null>(null);
-
+  
+  // ⏳ เพิ่มตัวแปรเก็บเวลาที่เซิร์ฟเวอร์ส่งมาให้
+  const [serverCreatedAt, setServerCreatedAt] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(180);
 
   const firstUnderscore = startParam ? startParam.indexOf('_') : -1;
@@ -26,7 +27,6 @@ export default function Home() {
   const isPlayer1 = user?.id?.toString() === expectedPlayer1Id;
   const isPlayer2 = user?.username?.toLowerCase() === expectedPlayer2Name.toLowerCase();
 
-  // 1. ยืนยันตัวตนเข้ารหัสแอปพลิเคชันปกติ
   useEffect(() => {
     if (!isReady || !initDataRaw || !startParam) {
       if (isReady) setAuthStatus('denied');
@@ -48,7 +48,7 @@ export default function Home() {
     verifyAccess();
   }, [isReady, initDataRaw, startParam]);
 
-  // 🔄 2. [ระบบ Polling ฟรี] คอยดึงสเตตัสล่าสุดจาก Server ทุกๆ 2 วินาที
+  // 🔄 ระบบดึงข้อมูลจาก Server พร้อมดึงค่าเวลากลาง (createdAt)
   useEffect(() => {
     if (!startParam || authStatus !== 'authorized') return;
 
@@ -62,18 +62,18 @@ export default function Home() {
           setP1Choice(data.p1Choice);
           setP2Choice(data.p2Choice);
           setFinalGame(data.finalGame);
+          if (data.createdAt) setServerCreatedAt(data.createdAt); // บันทึกเวลากลางจากเซิร์ฟเวอร์
         }
       } catch (err) {
         console.error('Polling error:', err);
       }
     };
 
-    fetchMatchStatus(); // รันครั้งแรกทันที
-    const interval = setInterval(fetchMatchStatus, 2000); // เช็กทุกๆ 2 วินาที
+    fetchMatchStatus();
+    const interval = setInterval(fetchMatchStatus, 2000);
     return () => clearInterval(interval);
   }, [startParam, authStatus]);
 
-  // 🛠️ 3. ฟังก์ชันสำหรับอัปเดตสเตตัสขึ้นเซิร์ฟเวอร์เมื่อมีการกดปุ่ม
   const updateMatchStateOnServer = async (newState: 'pending' | 'accepted' | 'rejected' | 'expired') => {
     setMatchState(newState);
     await fetch('/api/match-status', {
@@ -83,25 +83,18 @@ export default function Home() {
     });
   };
 
-  // ⏱️ 4. ระบบเลเวลเวลานับถอยหลังตัวเลขตรงกัน
+  // ⏱️ ระบบนับเวลาถอยหลังถอดสมการจาก Server Time โดยตรง (ลบโค้ด localStorage ทิ้งเรียบร้อย)
   useEffect(() => {
-    if (!startParam) return;
-    const storageKey = `match_time_${startParam}`;
-    let creationTime = localStorage.getItem(storageKey);
-    if (!creationTime) {
-      creationTime = Date.now().toString();
-      localStorage.setItem(storageKey, creationTime);
-    }
-    const startTime = parseInt(creationTime, 10);
+    if (!serverCreatedAt || matchState === 'expired' || !!finalGame) return;
 
     const checkTimeout = () => {
       const now = Date.now();
-      const elapsedMs = now - startTime;
-      const limit = 3 * 60 * 1000; // 3 นาที
+      const elapsedMs = now - serverCreatedAt;
+      const limit = 3 * 60 * 1000; // ล็อกเวลาเลือกและตอบรับร่วมกันที่ 3 นาที
       const remaining = Math.max(0, Math.floor((limit - elapsedMs) / 1000));
       setTimeLeft(remaining);
 
-      if (elapsedMs > limit && matchState !== 'expired' && !finalGame) {
+      if (elapsedMs > limit && matchState !== 'expired') {
         updateMatchStateOnServer('expired');
       }
     };
@@ -109,7 +102,7 @@ export default function Home() {
     checkTimeout();
     const timer = setInterval(checkTimeout, 1000);
     return () => clearInterval(timer);
-  }, [startParam, matchState, finalGame]);
+  }, [serverCreatedAt, matchState, finalGame]);
 
   if (authStatus === 'loading') return <LoadingScreen />;
   if (authStatus === 'denied') return <DeniedScreen />;
@@ -135,7 +128,7 @@ export default function Home() {
       isPlayer2={isPlayer2}
       expectedPlayer2Name={expectedPlayer2Name}
       matchState={matchState}
-      setMatchState={updateMatchStateOnServer} // ใช้ฟังก์ชันส่งค่าขึ้น Server
+      setMatchState={updateMatchStateOnServer}
       timeLeft={timeLeft}
     />
   );
