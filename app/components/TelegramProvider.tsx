@@ -25,33 +25,51 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    const initTelegram = async () => {
+    const initTelegram = () => {
       try {
-        // Dynamically import the SDK methods safely on the client browser
-        const sdk = await import('@telegram-apps/sdk');
+        const webApp = (window as any).Telegram?.WebApp;
         
-        const launchParams = sdk.retrieveLaunchParams() as any;
-        
-        // COMPATIBILITY FIX: Attempt to extract raw data using older launch parameters
-        // fallback to the new retrieveRawInitData() method if it is missing.
-        let rawInitData = launchParams.initDataRaw || null;
-        if (!rawInitData && typeof (sdk as any).retrieveRawInitData === 'function') {
-          rawInitData = (sdk as any).retrieveRawInitData() || null;
+        let rawData = null;
+        let start = null;
+        let userData = null;
+
+        if (webApp) {
+          webApp.ready();
+          rawData = webApp.initData || null;
+          start = webApp.initDataUnsafe?.start_param || null;
+          userData = webApp.initDataUnsafe?.user || null;
         }
-        
+
+        // UNIVERSAL IFRAME SCRAPER FALLBACK:
+        // If startParam is null, scrape Telegram's active webview location hash/search hashes directly
+        if (!start && typeof window !== 'undefined') {
+          const searchParams = new URLSearchParams(window.location.search);
+          start = searchParams.get('tgWebAppStartParam') || null;
+
+          // If it's located inside the URL hash string variant instead
+          if (!start && window.location.hash) {
+            const hashClean = window.location.hash.substring(1);
+            const hashParams = new URLSearchParams(hashClean);
+            start = hashParams.get('tgWebAppStartParam') || null;
+            if (!rawData) rawData = hashClean;
+          }
+        }
+
         setSdkData({
-          initDataRaw: rawInitData,
-          startParam: launchParams.startParam || null,
-          user: launchParams.initData?.user || null,
+          initDataRaw: rawData,
+          startParam: start,
+          user: userData,
           isReady: true,
         });
+
       } catch (error) {
-        console.warn("Not running inside Telegram context:", error);
+        console.error("Telegram fallback loader failed:", error);
         setSdkData((prev) => ({ ...prev, isReady: true }));
       }
     };
 
-    initTelegram();
+    const timer = setTimeout(initTelegram, 150);
+    return () => clearTimeout(timer);
   }, []);
 
   return (

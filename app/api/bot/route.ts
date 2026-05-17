@@ -24,13 +24,11 @@ bot.command('vs', async (ctx) => {
         const opponentUsername = match[1];
         const roomParam = `${challengerId}_${opponentUsername}`;
 
-        // FIXED SYNTAX: Changes '?' to '/' and 'startapp=' to 'startapp-' or '?startapp=' alternate fallback
-        // The absolute standard bulletproof format for Telegram Mini App Direct Links:
+        // This specific structure is required by Telegram to forward startapp on mobile devices
         const keyboard = new InlineKeyboard().url(
             "⚔️ Enter Match Arena",
             `https://t.me/Exposegamebot/Expose_Game?startapp=${roomParam}`
         );
-
         // SWITCHED TO HTML PARSING: Cleaner, bulletproof rendering
         await ctx.reply(
             `🔥 <b>EXPOSE DUEL CHALLENGE!</b> 🔥\n\n@${challengerName} has challenged @${opponentUsername} to a match!\n\n🔒 <i>Only these two combatants can access this secure room.</i>`,
