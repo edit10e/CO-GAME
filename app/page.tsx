@@ -105,7 +105,7 @@ export default function Home() {
 
       {/* เส้นแกนแบ่งฝั่งตรงกลางทำมุมเฉียงสะท้อนแสง */}
       <div className="absolute inset-0 w-full h-full pointer-events-none opacity-30 z-10">
-        <div className="absolute top-0 bottom-0 left-[50%] w-[2px] bg-linear-to-b from-amber-400 via-white to-transparent transform -translate-x-1/2 -skew-x-6" />
+        <div className="absolute top-0 bottom-0 left-[50%] w-0.5 bg-linear-to-b from-amber-400 via-white to-transparent transform -translate-x-1/2 -skew-x-6" />
       </div>
 
       {/* =========================================================================

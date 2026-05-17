@@ -26,7 +26,7 @@ bot.command('vs', async (ctx) => {
 
         // This specific structure is required by Telegram to forward startapp on mobile devices
         const keyboard = new InlineKeyboard().url(
-            "⚔️ Enter Match Arena",
+            "⚔️ เข้าสู่การแข่งขัน ",
             `https://t.me/Exposegamebot/Expose_Game?startapp=${roomParam}`
         );
         // SWITCHED TO HTML PARSING: Cleaner, bulletproof rendering
