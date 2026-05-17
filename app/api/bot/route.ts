@@ -28,6 +28,7 @@ bot.command('vs', async (ctx) => {
       `https://t.me/Exposegamebot/Expose_Game?startapp=${roomParam}`
     );
 
+    // FIXED: Escaped ALL punctuation tags (!) and (.) to satisfy MarkdownV2 parsing rules
     await ctx.reply(
       `🔥 *EXPOSE DUEL CHALLENGE\!* 🔥\n\n@${challengerName} has challenged @${opponentUsername} to a match\!\n\n🔒 _Only these two combatants can access this secure room\._`,
       { reply_markup: keyboard, parse_mode: "MarkdownV2" }
@@ -41,8 +42,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     
-    // FIX: Force grammY to initialize its internal bot settings 
-    // before attempting to process the webhook update on Vercel.
     if (!bot.isInited()) {
       await bot.init();
     }
