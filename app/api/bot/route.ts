@@ -28,10 +28,10 @@ bot.command('vs', async (ctx) => {
       `https://t.me/Exposegamebot/Expose_Game?startapp=${roomParam}`
     );
 
-    // FIXED: Escaped ALL punctuation tags (!) and (.) to satisfy MarkdownV2 parsing rules
+    // SWITCHED TO HTML PARSING: Cleaner, bulletproof rendering
     await ctx.reply(
-      `🔥 *EXPOSE DUEL CHALLENGE\!* 🔥\n\n@${challengerName} has challenged @${opponentUsername} to a match\!\n\n🔒 _Only these two combatants can access this secure room\._`,
-      { reply_markup: keyboard, parse_mode: "MarkdownV2" }
+      `🔥 <b>EXPOSE DUEL CHALLENGE!</b> 🔥\n\n@${challengerName} has challenged @${opponentUsername} to a match!\n\n🔒 <i>Only these two combatants can access this secure room.</i>`,
+      { reply_markup: keyboard, parse_mode: "HTML" }
     );
   } catch (error) {
     console.error("Telegram bot runtime script issue:", error);
