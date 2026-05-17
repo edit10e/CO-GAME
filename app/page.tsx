@@ -94,7 +94,7 @@ export default function Home() {
     <main className="fixed inset-0 w-screen h-screen bg-slate-950 overflow-hidden select-none font-sans">
       
       {/* =========================================================================
-          💥 อัปเดต: พื้นหลังแบ่งฝั่งทำมุมเอียง (Angled Line Split 50:50) 
+          💥 พื้นหลังแบ่งฝั่งทำมุมเอียงพาดสลับเฉียงพาสเทลเท่ ๆ (Angled Line Split 50:50) 
          ========================================================================= */}
       <div className="absolute inset-0 w-full h-full flex pointer-events-none z-0">
         {/* ฝั่งซ้าย: สีแดงทำมุมเฉียงไปทางขวา */}
@@ -113,10 +113,10 @@ export default function Home() {
          ========================================================================= */}
       <div className="absolute inset-0 w-full h-full z-20 flex flex-col justify-between py-16 px-4">
         
-        {/* ส่วนหัวแสดงสถานะปัจจุบัน */}
-        <div className="w-full text-center drop-shadow-md">
-          <p className="text-[11px] font-black tracking-widest text-amber-400 uppercase">
-            {matchState === 'accepted' ? '⚡ กำลังแข่งขัน ⚡' : '🔥 รอการตอบรับคำท้า 🔥'}
+        {/* ส่วนหัวแสดงชื่อแมตช์ตัวใหญ่กระชับตระการตา */}
+        <div className="w-full text-center drop-shadow-lg">
+          <p className="text-3xl font-black tracking-wider text-amber-400 uppercase animate-pulse">
+            🔥 เกมกล้าท้าเสียว 🔥
           </p>
         </div>
 
@@ -152,10 +152,8 @@ export default function Home() {
           </div>
 
           {/* ตราสัญลักษณ์ VS ตรงกลางจอมุมเอียง */}
-          <div className="absolute z-30 transform -translate-y-4">
-            <div className="w-14 h-14 bg-slate-950 border-2 border-slate-800 rounded-full flex items-center justify-center font-black text-2xl tracking-tighter text-white italic shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+          <div className="absolute text-4xl z-30 transform -translate-y-4">
               VS
-            </div>
           </div>
 
           {/* คู่ต่อสู้ (PLAYER 2 - ฝั่งขวา) */}
@@ -189,7 +187,7 @@ export default function Home() {
         </div>
 
         {/* =========================================================================
-            🎮 ส่วนควบคุมปุ่มกดและการแสดงผลสถานะด้านล่างจอ (ภาษาไทย)
+            🎮 ส่วนควบคุมปุ่มกดและการแสดงผลสถานะด้านล่างจอตามเงื่อนไขที่กำหนด
            ========================================================================= */}
         <div className="w-full max-w-xs mx-auto flex flex-col items-center justify-center z-30">
           
@@ -208,7 +206,7 @@ export default function Home() {
           {matchState === 'pending' && (
             <>
               {isPlayer2 ? (
-                /* ปรับปุ่มเลือกสถานะสำหรับ ฝั่งคู่ต่อสู้ (Player 2) */
+                /* ชุดคำสั่งสำหรับฝั่งคู่ต่อสู้ (Player 2) เพื่อกดยอมรับหรือปฏิเสธ */
                 <div className="flex items-center gap-4 w-full px-2">
                   <button 
                     onClick={() => setMatchState('rejected')}
@@ -224,14 +222,14 @@ export default function Home() {
                   </button>
                 </div>
               ) : isPlayer1 ? (
-                /* หน้าจอสถานะรอคอยสำหรับ ฝั่งผู้ท้าชิง (Player 1) */
-                <div className="bg-slate-950/80 border border-slate-800 text-slate-400 font-bold text-[10px] tracking-widest uppercase py-3 px-6 rounded-xl backdrop-blur-md animate-pulse text-center">
+                /* หน้าจอสถานะรอคอยสำหรับฝั่งผู้ท้าชิง (Player 1) */
+                <div className="bg-slate-950/80 border border-slate-800 text-slate-400 font-bold text-xs tracking-wide py-3 px-6 rounded-xl backdrop-blur-md animate-pulse text-center leading-relaxed">
                   กำลังรอการตอบกลับจาก @{expectedPlayer2Name}...
                 </div>
               ) : (
-                /* หน้าจอล็อกสำหรับคนนอกอื่น ๆ */
-                <div className="bg-slate-950/90 border border-amber-500/20 text-amber-400 font-black text-xs tracking-widest uppercase py-3.5 px-8 rounded-full shadow-2xl backdrop-blur-md">
-                  🚀 ระบบเริ่มเกม...
+                /* หน้าจอแจ้งเตือนบุคคลภายนอกที่ไม่ใช่คู่ประลองหลักของห้องนี้ */
+                <div className="bg-slate-950/90 border border-amber-500/20 text-amber-400 font-black text-xs tracking-widest uppercase py-3.5 px-8 rounded-full shadow-2xl backdrop-blur-md text-center">
+                  กำลังแข่งขัน
                 </div>
               )}
             </>
