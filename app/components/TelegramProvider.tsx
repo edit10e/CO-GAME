@@ -27,11 +27,20 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initTelegram = async () => {
       try {
-        const { retrieveLaunchParams } = await import('@telegram-apps/sdk');
-        const launchParams = retrieveLaunchParams() as any;
+        // Dynamically import the SDK methods safely on the client browser
+        const sdk = await import('@telegram-apps/sdk');
+        
+        const launchParams = sdk.retrieveLaunchParams() as any;
+        
+        // COMPATIBILITY FIX: Attempt to extract raw data using older launch parameters
+        // fallback to the new retrieveRawInitData() method if it is missing.
+        let rawInitData = launchParams.initDataRaw || null;
+        if (!rawInitData && typeof (sdk as any).retrieveRawInitData === 'function') {
+          rawInitData = (sdk as any).retrieveRawInitData() || null;
+        }
         
         setSdkData({
-          initDataRaw: launchParams.initDataRaw || null,
+          initDataRaw: rawInitData,
           startParam: launchParams.startParam || null,
           user: launchParams.initData?.user || null,
           isReady: true,
