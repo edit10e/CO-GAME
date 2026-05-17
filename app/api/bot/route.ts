@@ -31,7 +31,7 @@ bot.command('vs', async (ctx) => {
         );
         // SWITCHED TO HTML PARSING: Cleaner, bulletproof rendering
         await ctx.reply(
-            `🔥 <b>EXPOSE DUEL CHALLENGE!</b> 🔥\n\n@${challengerName} has challenged @${opponentUsername} to a match!\n\n🔒 <i>Only these two combatants can access this secure room.</i>`,
+            `🔥 <b>เกม กล้า ท้า เสียว!</b> 🔥\n\n@${challengerName} ท้าแข่งกับ @${opponentUsername}!\n\nกดเปิดเกมข้างล่างเลย👇`,
             { reply_markup: keyboard, parse_mode: "HTML" }
         );
     } catch (error) {
