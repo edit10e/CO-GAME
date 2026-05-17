@@ -5,7 +5,6 @@ const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN || '');
 
 bot.command('vs', async (ctx) => {
   try {
-    // 1. TypeScript Guard Clause: Ensure message and user context exist
     if (!ctx.message || !ctx.from) {
       return;
     }
@@ -41,6 +40,13 @@ bot.command('vs', async (ctx) => {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    
+    // FIX: Force grammY to initialize its internal bot settings 
+    // before attempting to process the webhook update on Vercel.
+    if (!bot.isInited()) {
+      await bot.init();
+    }
+    
     await bot.handleUpdate(body);
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
