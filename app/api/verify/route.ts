@@ -37,11 +37,17 @@ export async function POST(req: Request) {
     if (!gameId || !gameId.includes('_')) {
       return NextResponse.json({ authorized: false, error: 'Corrupt arena link structure' }, { status: 400 });
     }
-    const [player1Id, player2Username] = gameId.split('_');
+
+    // CRITICAL FIX: Safely split ONLY at the first underscore.
+    // This leaves underscores inside the opponent's username completely untouched!
+    const firstUnderscoreIndex = gameId.indexOf('_');
+    const player1Id = gameId.substring(0, firstUnderscoreIndex);
+    const player2Username = gameId.substring(firstUnderscoreIndex + 1);
+
     const currentUserId = user.id.toString();
     const currentUsername = user.username || "";
 
-    // FIX: Make sure BOTH players can enter!
+    // Evaluate access matching parameters
     const isPlayer1 = currentUserId === player1Id;
     const isPlayer2 = currentUsername.toLowerCase() === player2Username.toLowerCase();
 
@@ -52,6 +58,7 @@ export async function POST(req: Request) {
       }, { status: 403 });
     }
 
+    // Return authorization status along with verified target payload data
     return NextResponse.json({ authorized: true, user });
   } catch (error) {
     return NextResponse.json({ authorized: false, error: 'Server authorization crash' }, { status: 500 });
