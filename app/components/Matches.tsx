@@ -9,6 +9,7 @@ interface MatchesProps {
   expectedPlayer2Name: string;
   matchState: 'pending' | 'accepted' | 'rejected' | 'expired';
   setMatchState: (state: 'pending' | 'accepted' | 'rejected' | 'expired') => void;
+  timeLeft: number;
 }
 
 export default function Matches({
@@ -18,6 +19,7 @@ export default function Matches({
   expectedPlayer2Name,
   matchState,
   setMatchState,
+  timeLeft,
 }: MatchesProps) {
   const [p1ImgError, setP1ImgError] = useState(false);
   const [p2ImgError, setP2ImgError] = useState(false);
@@ -28,9 +30,15 @@ export default function Matches({
   const p1Initial = isPlayer1 && user?.username ? user.username.charAt(0).toUpperCase() : 'M';
   const p2Initial = expectedPlayer2Name ? expectedPlayer2Name.charAt(0).toUpperCase() : 'P';
 
+  // แปลงวินาทีเป็นฟอร์แมต mm:ss
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="fixed inset-0 w-screen h-screen select-none font-sans overflow-hidden">
-      {/* 💥 พื้นหลังแบ่งฝั่งทำมุมเอียง (Angled Line Split 50:50) */}
       <div className="absolute inset-0 w-full h-full flex pointer-events-none z-0">
         <div className="absolute inset-0 w-full h-full bg-linear-to-b from-red-600 via-red-950 to-slate-950 [clip-path:polygon(0_0,55%_0,45%_100%,0_100%)] z-10" />
         <div className="absolute inset-0 w-full h-full bg-linear-to-b from-blue-600 via-blue-950 to-slate-950 z-0" />
@@ -41,11 +49,17 @@ export default function Matches({
       </div>
 
       <div className="absolute inset-0 w-full h-full z-20 flex flex-col justify-between py-16 px-4">
-        <div className="w-full text-center drop-shadow-lg">
-          <p className="text-3xl font-black tracking-wider text-amber-400 uppercase animate-pulse">🔥 เกมสู้ 🔥</p>
+        
+        {/* ⏱️ ส่วนหัวข้อและนาฬิกานับถอยหลังใต้ชื่อเกม */}
+        <div className="w-full text-center drop-shadow-lg flex flex-col items-center gap-1.5">
+          <p className="text-3xl font-black tracking-wider text-amber-400 uppercase">🔥 เกมสู้ 🔥</p>
+          {matchState === 'pending' && (
+            <div className="bg-slate-950/60 border border-red-500/30 px-3 py-1 rounded-full font-mono text-sm tracking-widest text-red-400 font-bold shadow-md shadow-red-900/10">
+              ⏱️ หมดเวลาใน {formatTime(timeLeft)}
+            </div>
+          )}
         </div>
 
-        {/* ส่วนแสดงภาพโปรไฟล์ */}
         <div className="w-full flex items-center justify-center relative my-auto">
           {/* ฝั่งผู้ท้าชิง */}
           <div className="flex flex-col items-center flex-1 text-center pr-4">
@@ -82,7 +96,6 @@ export default function Matches({
           </div>
         </div>
 
-        {/* 🎮 อัปเดต: ปรับปรุงส่วนแจ้งสถานะด้านล่างสำหรับการดูของคนนอก */}
         <div className="w-full max-w-xs mx-auto flex flex-col items-center justify-center z-30">
           {matchState === 'rejected' && (
             <div className="bg-slate-950/90 border border-red-500/30 text-red-400 font-black text-xs tracking-widest uppercase py-3.5 px-8 rounded-full shadow-2xl backdrop-blur-md">
@@ -99,18 +112,15 @@ export default function Matches({
           {matchState === 'pending' && (
             <>
               {isPlayer2 ? (
-                /* ปุ่มกดยอมรับ/ปฏิเสธ สำหรับผู้เล่นฝั่งคู่ต่อสู้ */
                 <div className="flex items-center gap-4 w-full px-2">
                   <button onClick={() => setMatchState('rejected')} className="flex-1 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-black tracking-widest uppercase py-4 rounded-2xl shadow-xl border border-red-500/40">ปฏิเสธ</button>
                   <button onClick={() => setMatchState('accepted')} className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-xs font-black tracking-widest uppercase py-4 rounded-2xl shadow-xl shadow-emerald-500/10">ยอมรับ</button>
                 </div>
               ) : isPlayer1 ? (
-                /* การแสดงผลบนจอของผู้เล่น 1 ที่รอคนเข้าเล่น */
                 <div className="bg-slate-950/80 border border-slate-800 text-slate-400 font-bold text-xs tracking-wide py-3 px-6 rounded-xl backdrop-blur-md animate-pulse text-center">
-                  กำลังรอการตอบกลับจาก @{expectedPlayer2Name}... (จำกัด 3 นาที)
+                  กำลังรอการตอบกลับจาก @{expectedPlayer2Name}...
                 </div>
               ) : (
-                /* 🎯 อัปเดต: คนทั่วไป (Spectator) จะเห็นข้อความระบุสถานะตรงนี้ */
                 <div className="bg-slate-950/90 border border-amber-500/20 text-amber-400 font-black text-xs tracking-widest uppercase py-3.5 px-8 rounded-full shadow-2xl backdrop-blur-md text-center">
                   รอการตอบกลับ
                 </div>

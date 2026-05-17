@@ -10,9 +10,10 @@ import GameList from './components/GameList';
 export default function Home() {
   const { isReady, user, startParam, initDataRaw } = useTelegram();
   const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'denied'>('loading');
-  
-  // จัดการสถานะแมตช์: เพิ่มสถานะ 'expired' สำหรับกรณีหมดเวลา
   const [matchState, setMatchState] = useState<'pending' | 'accepted' | 'rejected' | 'expired'>('pending');
+  
+  // สเตตเก็บเวลานับถอยหลังเป็นวินาที
+  const [timeLeft, setTimeLeft] = useState<number>(180); // เริ่มต้นที่ 3 นาที (180 วิ)
 
   const firstUnderscore = startParam ? startParam.indexOf('_') : -1;
   const expectedPlayer1Id = firstUnderscore !== -1 ? startParam!.substring(0, firstUnderscore) : '';
@@ -43,11 +44,10 @@ export default function Home() {
     verifyAccess();
   }, [isReady, initDataRaw, startParam]);
 
-  // ระบบตรวจสอบการหมดเวลาอัตโนมัติ (3 นาที และ 10 นาที Lifecycle)
+  // ระบบคำนวณและดักจับ Lifecycle ของห้อง
   useEffect(() => {
     if (!startParam) return;
 
-    // ตั้งค่าหรือดึงเวลาเริ่มต้นสร้างห้องจำลองเก็บไว้ในฐานข้อมูลเครื่อง (Client-side sync)
     const storageKey = `match_time_${startParam}`;
     let creationTime = localStorage.getItem(storageKey);
     
@@ -62,16 +62,25 @@ export default function Home() {
       const now = Date.now();
       const elapsedMs = now - startTime;
 
-      if (matchState === 'pending' && elapsedMs > 3 * 60 * 1000) {
-        // หากผู้เล่น 2 ไม่กดยอมรับภายใน 3 นาที -> หมดอายุ
-        setMatchState('expired');
-      } else if (matchState === 'accepted' && elapsedMs > 10 * 60 * 1000) {
-        // หากไม่มีการเล่นหรือทำกิจกรรมใน 10 นาที -> ตัดแมตช์ทิ้ง
-        setMatchState('expired');
+      if (matchState === 'pending') {
+        const totalPendingTime = 3 * 60 * 1000; // 3 นาที
+        const remaining = Math.max(0, Math.floor((totalPendingTime - elapsedMs) / 1000));
+        setTimeLeft(remaining);
+
+        if (elapsedMs > totalPendingTime) {
+          setMatchState('expired');
+        }
+      } else if (matchState === 'accepted') {
+        const totalMatchTime = 10 * 60 * 1000; // 10 นาที
+        const remaining = Math.max(0, Math.floor((totalMatchTime - elapsedMs) / 1000));
+        setTimeLeft(remaining);
+
+        if (elapsedMs > totalMatchTime) {
+          setMatchState('expired');
+        }
       }
     };
 
-    // รันตรวจสอบทันทีและทุกๆ 1 วินาที
     checkTimeout();
     const timer = setInterval(checkTimeout, 1000);
     return () => clearInterval(timer);
@@ -83,9 +92,8 @@ export default function Home() {
   const isPlayer1 = user?.id?.toString() === expectedPlayer1Id;
   const isPlayer2 = user?.username?.toLowerCase() === expectedPlayer2Name.toLowerCase();
 
-  // ปรับเงื่อนไขสลับหน้าจอ: ต้องตอบรับแล้ว และต้องยังไม่หมดเวลา 10 นาที
   if (matchState === 'accepted') {
-    return <GameList isPlayer1={isPlayer1} isPlayer2={isPlayer2} />;
+    return <GameList isPlayer1={isPlayer1} isPlayer2={isPlayer2} timeLeft={timeLeft} />;
   }
 
   return (
@@ -96,6 +104,7 @@ export default function Home() {
       expectedPlayer2Name={expectedPlayer2Name}
       matchState={matchState}
       setMatchState={setMatchState}
+      timeLeft={timeLeft}
     />
   );
 }

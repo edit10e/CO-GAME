@@ -5,19 +5,32 @@ import { useState } from 'react';
 interface GameListProps {
   isPlayer1: boolean;
   isPlayer2: boolean;
+  timeLeft: number;
 }
 
-export default function GameList({ isPlayer1, isPlayer2 }: GameListProps) {
+export default function GameList({ isPlayer1, isPlayer2, timeLeft }: GameListProps) {
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const isParticipant = isPlayer1 || isPlayer2;
+
+  // แปลงวินาทีเป็นฟอร์แมต mm:ss
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <main className="fixed inset-0 w-screen h-screen bg-slate-950 p-6 flex flex-col justify-center items-center font-sans text-white select-none overflow-y-auto z-40">
       <div className="absolute inset-0 bg-linear-to-b from-slate-900 via-slate-950 to-black z-0 pointer-events-none" />
       
       <div className="w-full max-w-xs flex flex-col gap-6 z-10 text-center">
-        <div>
+        
+        {/* ⏱️ ส่วนหัวข้อและนาฬิกานับถอยหลังตัดแมตช์ 10 นาที */}
+        <div className="flex flex-col items-center gap-1.5">
           <h1 className="text-3xl font-black tracking-wider text-amber-400 uppercase">🎮 เลือกเกมประลอง</h1>
+          <div className="bg-slate-900/80 border border-amber-500/30 px-3 py-1 rounded-full font-mono text-sm tracking-widest text-amber-400 font-bold shadow-md animate-pulse">
+            ⏱️ เวลาเลือกเกม: {formatTime(timeLeft)}
+          </div>
           <p className="text-[11px] text-slate-400 mt-1 uppercase tracking-widest font-bold">
             {isParticipant ? 'กรุณาเลือกหนึ่งเกมเพื่อเริ่มการปะทะ' : 'ผู้เล่นหลักกำลังพิจารณาเลือกเกม'}
           </p>
@@ -62,7 +75,6 @@ export default function GameList({ isPlayer1, isPlayer2 }: GameListProps) {
           </button>
         </div>
 
-        {/* 🎯 สเตตัสระบุความเคลื่อนไหวสำหรับคนนอก */}
         {!isParticipant && !activeGame && (
           <div className="bg-slate-900/90 border border-amber-500/20 text-amber-400 text-xs font-black py-3.5 px-6 rounded-full shadow-2xl backdrop-blur-md">
             กำลังเลือกเกม...
