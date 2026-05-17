@@ -12,8 +12,8 @@ export default function Home() {
   const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'denied'>('loading');
   const [matchState, setMatchState] = useState<'pending' | 'accepted' | 'rejected' | 'expired'>('pending');
   
-  // สเตตเก็บเวลานับถอยหลังเป็นวินาที
-  const [timeLeft, setTimeLeft] = useState<number>(180); // เริ่มต้นที่ 3 นาที (180 วิ)
+  // ตัวเก็บค่าเวลานับถอยหลังหน่วยเป็นวินาที (ตัวแปรกลางแชร์กันทุกฝั่ง)
+  const [timeLeft, setTimeLeft] = useState<number>(180);
 
   const firstUnderscore = startParam ? startParam.indexOf('_') : -1;
   const expectedPlayer1Id = firstUnderscore !== -1 ? startParam!.substring(0, firstUnderscore) : '';
@@ -44,7 +44,7 @@ export default function Home() {
     verifyAccess();
   }, [isReady, initDataRaw, startParam]);
 
-  // ระบบคำนวณและดักจับ Lifecycle ของห้อง
+  // Global Time Sync Logic (หมดเวลาพร้อมกันทุกเครื่อง)
   useEffect(() => {
     if (!startParam) return;
 
@@ -63,7 +63,7 @@ export default function Home() {
       const elapsedMs = now - startTime;
 
       if (matchState === 'pending') {
-        const totalPendingTime = 3 * 60 * 1000; // 3 นาที
+        const totalPendingTime = 3 * 60 * 1000; // 3 นาทีแรกสิทธิ์รับคำท้า
         const remaining = Math.max(0, Math.floor((totalPendingTime - elapsedMs) / 1000));
         setTimeLeft(remaining);
 
@@ -71,11 +71,12 @@ export default function Home() {
           setMatchState('expired');
         }
       } else if (matchState === 'accepted') {
-        const totalMatchTime = 10 * 60 * 1000; // 10 นาที
-        const remaining = Math.max(0, Math.floor((totalMatchTime - elapsedMs) / 1000));
+        // เมื่อยอมรับแล้ว รีเซ็ตเวลาในห้องนี้ให้มีเวลาเลือกเกมอีก 3 นาทีแทน (ตามเงื่อนไขใหม่)
+        const totalSelectionTime = 3 * 60 * 1000; 
+        const remaining = Math.max(0, Math.floor((totalSelectionTime - elapsedMs) / 1000));
         setTimeLeft(remaining);
 
-        if (elapsedMs > totalMatchTime) {
+        if (elapsedMs > totalSelectionTime) {
           setMatchState('expired');
         }
       }
@@ -93,7 +94,14 @@ export default function Home() {
   const isPlayer2 = user?.username?.toLowerCase() === expectedPlayer2Name.toLowerCase();
 
   if (matchState === 'accepted') {
-    return <GameList isPlayer1={isPlayer1} isPlayer2={isPlayer2} timeLeft={timeLeft} />;
+    return (
+      <GameList 
+        isPlayer1={isPlayer1} 
+        isPlayer2={isPlayer2} 
+        timeLeft={timeLeft} 
+        expectedPlayer2Name={expectedPlayer2Name}
+      />
+    );
   }
 
   return (

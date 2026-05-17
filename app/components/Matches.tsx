@@ -30,7 +30,6 @@ export default function Matches({
   const p1Initial = isPlayer1 && user?.username ? user.username.charAt(0).toUpperCase() : 'M';
   const p2Initial = expectedPlayer2Name ? expectedPlayer2Name.charAt(0).toUpperCase() : 'P';
 
-  // แปลงวินาทีเป็นฟอร์แมต mm:ss
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -50,12 +49,12 @@ export default function Matches({
 
       <div className="absolute inset-0 w-full h-full z-20 flex flex-col justify-between py-16 px-4">
         
-        {/* ⏱️ ส่วนหัวข้อและนาฬิกานับถอยหลังใต้ชื่อเกม */}
+        {/* ⏱️ บอร์ดเวลากลางจัดตำแหน่งให้อยู่ตําแหน่งศูนย์กลางของทุกฝั่งผู้ใช้ */}
         <div className="w-full text-center drop-shadow-lg flex flex-col items-center gap-1.5">
           <p className="text-3xl font-black tracking-wider text-amber-400 uppercase">🔥 เกมสู้ 🔥</p>
           {matchState === 'pending' && (
-            <div className="bg-slate-950/60 border border-red-500/30 px-3 py-1 rounded-full font-mono text-sm tracking-widest text-red-400 font-bold shadow-md shadow-red-900/10">
-              ⏱️ หมดเวลาใน {formatTime(timeLeft)}
+            <div className="bg-slate-950/60 border border-red-500/30 px-4 py-1.5 rounded-full font-mono text-sm tracking-widest text-red-400 font-bold shadow-md shadow-red-900/10 animate-pulse">
+              ⏱️ หมดเวลาตอบรับใน {formatTime(timeLeft)}
             </div>
           )}
         </div>
