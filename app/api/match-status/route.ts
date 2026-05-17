@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// คลังความจำชั่วคราวบนเซิร์ฟเวอร์
+// คลังเก็บสเตตัสความจำจำลองแชร์กันแบบไร้ค่าใช้จ่ายบน Server ตัวกลาง
 const globalMatchesMemory: Record<string, any> = {};
 
 export async function GET(request: Request) {
@@ -11,14 +11,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing gameId' }, { status: 400 });
   }
 
-  // 🎯 ปรับปรุง: ถ้ายังไม่มีห้องนี้ ให้สร้างห้องพร้อมบันทึกเวลากลาง ณ วินาทีนั้นทันที
+  // หากยังไม่มีประวัติห้อง ให้จัดสรรโครงสร้างเริ่มต้นพร้อมล็อกเวลาเซิร์ฟเวอร์ (Server Time) ทันที
   if (!globalMatchesMemory[gameId]) {
     globalMatchesMemory[gameId] = {
       matchState: 'pending',
       p1Choice: null,
       p2Choice: null,
       finalGame: null,
-      createdAt: Date.now(), // เวลาตั้งต้นจุดเดียว ใช้ร่วมกันทุกเครื่อง!
+      createdAt: Date.now(), 
     };
   }
 

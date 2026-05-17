@@ -23,7 +23,6 @@ export default function GameList({ startParam, isPlayer1, isPlayer2, timeLeft, p
   const [rouletteGame, setRouletteGame] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState<boolean>(false);
 
-  // ส่งผลโหวตเกมของเราขึ้นเซิร์ฟเวอร์
   const handleSelectGame = async (gameId: string) => {
     const body: any = { gameId: startParam };
     if (isPlayer1) body.p1Choice = gameId;
@@ -36,18 +35,16 @@ export default function GameList({ startParam, isPlayer1, isPlayer2, timeLeft, p
     });
   };
 
-  // 🎰 ดักจับเมื่อผลการโหวตจาก API ครบทั้ง 2 ฝั่ง -> ทำการตัดสินใจ
+  // แอนิเมชันคำนวณเสียงโหวตเพื่อสุ่มรูเล็ตแบบเรียลไทม์
   useEffect(() => {
     if (p1Choice && p2Choice && !finalGame && !isSpinning) {
       if (p1Choice === p2Choice) {
-        // ถ้าใจตรงกัน ส่งผลลัพธ์เกมขึ้นเก็บทันที
         fetch('/api/match-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ gameId: startParam, finalGame: p1Choice }),
         });
       } else {
-        // ถ้าใจไม่ตรงกัน เริ่มสุ่ม Roulette อนิเมชั่นลุ้นรางวัล (แสดงผลพร้อมกันทั้ง 2 หน้าจอ)
         setIsSpinning(true);
         let counter = 0;
         const choicesArray = [p1Choice, p2Choice];
@@ -61,7 +58,6 @@ export default function GameList({ startParam, isPlayer1, isPlayer2, timeLeft, p
           clearInterval(interval);
           setIsSpinning(false);
           
-          // ให้เฉพาะผู้เล่นฝั่งที่ 1 (หรือโฮสต์) เป็นคนสุ่มเพื่อความเที่ยงตรง แล้วส่งขึ้นเซิร์ฟเวอร์
           if (isPlayer1) {
             const luckyGame = choicesArray[Math.floor(Math.random() * 2)];
             fetch('/api/match-status', {
@@ -73,7 +69,7 @@ export default function GameList({ startParam, isPlayer1, isPlayer2, timeLeft, p
         }, 3000);
       }
     }
-  }, [p1Choice, p2Choice, finalGame, startParam, isPlayer1]);
+  }, [p1Choice, p2Choice, finalGame, startParam, isPlayer1, isSpinning]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

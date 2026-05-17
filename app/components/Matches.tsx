@@ -38,6 +38,7 @@ export default function Matches({
 
   return (
     <div className="fixed inset-0 w-screen h-screen select-none font-sans overflow-hidden">
+      {/* Background Effect */}
       <div className="absolute inset-0 w-full h-full flex pointer-events-none z-0">
         <div className="absolute inset-0 w-full h-full bg-linear-to-b from-red-600 via-red-950 to-slate-950 [clip-path:polygon(0_0,55%_0,45%_100%,0_100%)] z-10" />
         <div className="absolute inset-0 w-full h-full bg-linear-to-b from-blue-600 via-blue-950 to-slate-950 z-0" />
@@ -48,19 +49,18 @@ export default function Matches({
       </div>
 
       <div className="absolute inset-0 w-full h-full z-20 flex flex-col justify-between py-16 px-4">
-        
-        {/* ⏱️ บอร์ดเวลากลางจัดตำแหน่งให้อยู่ตําแหน่งศูนย์กลางของทุกฝั่งผู้ใช้ */}
+        {/* หัวข้อเกมและเวลาตรงกลาง */}
         <div className="w-full text-center drop-shadow-lg flex flex-col items-center gap-1.5">
           <p className="text-3xl font-black tracking-wider text-amber-400 uppercase">🔥 เกมสู้ 🔥</p>
           {matchState === 'pending' && (
-            <div className="bg-slate-950/60 border border-red-500/30 px-4 py-1.5 rounded-full font-mono text-sm tracking-widest text-red-400 font-bold shadow-md shadow-red-900/10 animate-pulse">
+            <div className="bg-slate-950/60 border border-red-500/30 px-4 py-1.5 rounded-full font-mono text-sm tracking-widest text-red-400 font-bold shadow-md animate-pulse">
               ⏱️ หมดเวลาตอบรับใน {formatTime(timeLeft)}
             </div>
           )}
         </div>
 
+        {/* บอร์ดโปรไฟล์ประจัญบาน VS */}
         <div className="w-full flex items-center justify-center relative my-auto">
-          {/* ฝั่งผู้ท้าชิง */}
           <div className="flex flex-col items-center flex-1 text-center pr-4">
             <div className={`w-24 h-24 rounded-full p-1 bg-slate-950/80 border-2 shadow-2xl flex items-center justify-center overflow-hidden ${
               isPlayer1 ? 'border-emerald-400 animate-pulse' : 'border-red-500/60'
@@ -79,7 +79,6 @@ export default function Matches({
             <div className="w-14 h-14 bg-slate-950 border-2 border-slate-800 rounded-full flex items-center justify-center font-black text-2xl text-white italic">VS</div>
           </div>
 
-          {/* ฝั่งคู่ต่อสู้ */}
           <div className="flex flex-col items-center flex-1 text-center pl-4">
             <div className={`w-24 h-24 rounded-full p-1 bg-slate-950/80 border-2 shadow-2xl flex items-center justify-center overflow-hidden ${
               isPlayer2 ? 'border-emerald-400 animate-pulse' : 'border-blue-500/60'
@@ -95,6 +94,7 @@ export default function Matches({
           </div>
         </div>
 
+        {/* ปุ่มควบคุมและข้อความสถานะ */}
         <div className="w-full max-w-xs mx-auto flex flex-col items-center justify-center z-30">
           {matchState === 'rejected' && (
             <div className="bg-slate-950/90 border border-red-500/30 text-red-400 font-black text-xs tracking-widest uppercase py-3.5 px-8 rounded-full shadow-2xl backdrop-blur-md">
@@ -113,7 +113,7 @@ export default function Matches({
               {isPlayer2 ? (
                 <div className="flex items-center gap-4 w-full px-2">
                   <button onClick={() => setMatchState('rejected')} className="flex-1 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-xs font-black tracking-widest uppercase py-4 rounded-2xl shadow-xl border border-red-500/40">ปฏิเสธ</button>
-                  <button onClick={() => setMatchState('accepted')} className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-xs font-black tracking-widest uppercase py-4 rounded-2xl shadow-xl shadow-emerald-500/10">ยอมรับ</button>
+                  <button onClick={() => setMatchState('accepted')} className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 text-xs font-black tracking-widest uppercase py-4 rounded-2xl shadow-xl">ยอมรับ</button>
                 </div>
               ) : isPlayer1 ? (
                 <div className="bg-slate-950/80 border border-slate-800 text-slate-400 font-bold text-xs tracking-wide py-3 px-6 rounded-xl backdrop-blur-md animate-pulse text-center">

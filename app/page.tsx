@@ -11,12 +11,12 @@ export default function Home() {
   const { isReady, user, startParam, initDataRaw } = useTelegram();
   const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'denied'>('loading');
   
+  // กำหนด Type ของสเตตัสครอบคลุมทั้ง 4 สถานะตั้งแต่เริ่มต้น
   const [matchState, setMatchState] = useState<'pending' | 'accepted' | 'rejected' | 'expired'>('pending');
   const [p1Choice, setP1Choice] = useState<string | null>(null);
   const [p2Choice, setP2Choice] = useState<string | null>(null);
   const [finalGame, setFinalGame] = useState<string | null>(null);
   
-  // ⏳ เพิ่มตัวแปรเก็บเวลาที่เซิร์ฟเวอร์ส่งมาให้
   const [serverCreatedAt, setServerCreatedAt] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(180);
 
@@ -27,6 +27,7 @@ export default function Home() {
   const isPlayer1 = user?.id?.toString() === expectedPlayer1Id;
   const isPlayer2 = user?.username?.toLowerCase() === expectedPlayer2Name.toLowerCase();
 
+  // 1. ตรวจสอบและยืนยันสิทธิ์ Telegram WebApp ปกติ
   useEffect(() => {
     if (!isReady || !initDataRaw || !startParam) {
       if (isReady) setAuthStatus('denied');
@@ -48,7 +49,7 @@ export default function Home() {
     verifyAccess();
   }, [isReady, initDataRaw, startParam]);
 
-  // 🔄 ระบบดึงข้อมูลจาก Server พร้อมดึงค่าเวลากลาง (createdAt)
+  // 🔄 2. Short Polling ซิงค์สถานะตรงกลางจาก Server ทุก 2 วินาที
   useEffect(() => {
     if (!startParam || authStatus !== 'authorized') return;
 
@@ -62,7 +63,7 @@ export default function Home() {
           setP1Choice(data.p1Choice);
           setP2Choice(data.p2Choice);
           setFinalGame(data.finalGame);
-          if (data.createdAt) setServerCreatedAt(data.createdAt); // บันทึกเวลากลางจากเซิร์ฟเวอร์
+          if (data.createdAt) setServerCreatedAt(data.createdAt);
         }
       } catch (err) {
         console.error('Polling error:', err);
@@ -74,6 +75,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [startParam, authStatus]);
 
+  // 🛠️ 3. ฟังก์ชันอัปเดตสถานะแมตช์ขึ้นเซิร์ฟเวอร์ (รองรับ 'expired' ในไทป์เรียบร้อย)
   const updateMatchStateOnServer = async (newState: 'pending' | 'accepted' | 'rejected' | 'expired') => {
     setMatchState(newState);
     await fetch('/api/match-status', {
@@ -83,14 +85,14 @@ export default function Home() {
     });
   };
 
-  // ⏱️ ระบบนับเวลาถอยหลังถอดสมการจาก Server Time โดยตรง (ลบโค้ด localStorage ทิ้งเรียบร้อย)
+  // ⏱️ 4. ตรวจจับเวลานับถอยหลัง 3 นาทีอ้างอิงจากเวลากลางของห้อง
   useEffect(() => {
     if (!serverCreatedAt || matchState === 'expired' || !!finalGame) return;
 
     const checkTimeout = () => {
       const now = Date.now();
       const elapsedMs = now - serverCreatedAt;
-      const limit = 3 * 60 * 1000; // ล็อกเวลาเลือกและตอบรับร่วมกันที่ 3 นาที
+      const limit = 3 * 60 * 1000; // ล็อกเวลาตอบรับและเลือกเกมไว้ร่วมกันที่ 3 นาที
       const remaining = Math.max(0, Math.floor((limit - elapsedMs) / 1000));
       setTimeLeft(remaining);
 
@@ -107,6 +109,7 @@ export default function Home() {
   if (authStatus === 'loading') return <LoadingScreen />;
   if (authStatus === 'denied') return <DeniedScreen />;
 
+  // หากผู้เล่นกดยอมรับสำเร็จ ให้สลับเข้าสู่หน้าต่างเลือกเกม
   if (matchState === 'accepted') {
     return (
       <GameList 
