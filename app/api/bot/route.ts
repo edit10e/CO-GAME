@@ -63,44 +63,35 @@ bot.command('vs', async (ctx) => {
 });
 
 // ==========================================
-// 2. ระบบดักจับ รูปภาพ/วิดีโอ/GIF และลบอัตโนมัติใน 60 วินาที
+// 2. ระบบดักจับ รูปภาพ/วิดีโอ/GIF และลบอัตโนมัติใน 60 วินาที (ทำงานทันทีไม่ต้องพิมพ์ข้อความ)
 // ==========================================
 bot.on(['message:photo', 'message:video', 'message:animation'], async (ctx) => {
     try {
-        // ดึงข้อความอธิบายใต้ภาพ/วิดีโอ (Caption)
-        const captionText = ctx.message.caption || "";
+        const chatId = ctx.chat.id;
+        const mediaMessageId = ctx.message.message_id;
+
+        // 🚀 ส่งข้อความเตือนทันทีที่ผู้ใช้ส่งภาพ/วิดีโอ/GIF เข้ามา โดยไม่ต้องเช็ก @ อีกต่อไป
+        const noticeMessage = await ctx.reply("⏳ มีเดียนี้จะถูกลบอัตโนมัติภายใน 60 วินาที...", {
+            reply_to_message_id: mediaMessageId
+        });
+
+        // ⏱️ ตั้งเวลาลบแยกชิ้นรายข้อความ (60 วินาที)
+        setTimeout(async () => {
+            try {
+                // ลบตัวไฟล์มีเดีย (รูปภาพ/วิดีโอ/GIF)
+                await ctx.api.deleteMessage(chatId, mediaMessageId);
+            } catch (err) {
+                console.error("Failed to delete media file:", err);
+            }
+
+            try {
+                // ลบข้อความแจ้งเตือนของบอทออกไปด้วย
+                await ctx.api.deleteMessage(chatId, noticeMessage.message_id);
+            } catch (err) {
+                console.error("Failed to delete notice message:", err);
+            }
+        }, 60000); // 60000 มิลลิวินาที = 60 วินาที
         
-        // ตรวจสอบว่าในข้อความมีการ Mention ถึงผู้ใช้ (@username) หรือไม่
-        const hasMention = captionText.match(/@(\w+)/);
-
-        // เงื่อนไข: ต้องเป็น มีเดีย และมีการแท็ก @ ถึงจะเข้าสู่ระบบลบอัตโนมัติ
-        if (hasMention) {
-            const chatId = ctx.chat.id;
-            const mediaMessageId = ctx.message.message_id;
-
-            // ส่งข้อความแจ้งเตือนผู้ใช้ว่าจะทำการลบ
-            const noticeMessage = await ctx.reply("⏳ รูปภาพ/วิดีโอนี้จะถูกลบอัตโนมัติภายใน 60 วินาที...", {
-                reply_to_message_id: mediaMessageId
-            });
-
-            // ⏱️ ใช้ setTimeout แยกรายข้อความ (Independent Background Job) 
-            // เมื่อครบ 60 วินาที (60000ms) ระบบจะสั่งลบไฟล์และข้อความแจ้งเตือนชิ้นนั้นๆ ทันที
-            setTimeout(async () => {
-                try {
-                    // ลบตัวไฟล์มีเดีย (รูปภาพ/วิดีโอ/GIF)
-                    await ctx.api.deleteMessage(chatId, mediaMessageId);
-                } catch (err) {
-                    console.error("Failed to delete media file:", err);
-                }
-
-                try {
-                    // ลบข้อความแจ้งเตือน "จะถูกลบอัตโนมัติภายใน 60 วินาที" ออกไปด้วยเพื่อความสะอาดของแชท
-                    await ctx.api.deleteMessage(chatId, noticeMessage.message_id);
-                } catch (err) {
-                    console.error("Failed to delete notice message:", err);
-                }
-            }, 60000); 
-        }
     } catch (error) {
         console.error("Error in auto-delete media function:", error);
     }
