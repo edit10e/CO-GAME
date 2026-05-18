@@ -7,16 +7,19 @@ import DeniedScreen from './components/DeniedScreen';
 import Matches from './components/Matches';
 import GameList from './components/GameList';
 
+// 🎯 สร้าง Type ร่วมกันชัดเจนป้องกัน TypeScript สับสน
+type MatchStatusType = 'pending' | 'accepted' | 'rejected' | 'expired';
+
 export default function Home() {
   const { isReady, user, startParam, initDataRaw } = useTelegram();
   const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'denied'>('loading');
-  
-  // กำหนด Type ของสเตตัสครอบคลุมทั้ง 4 สถานะตั้งแต่เริ่มต้น
-  const [matchState, setMatchState] = useState<'pending' | 'accepted' | 'rejected' | 'expired'>('pending');
+
+  // ระบุประเภทของ State อย่างเด็ดขาดด้วย <MatchStatusType>
+  const [matchState, setMatchState] = useState<MatchStatusType>('pending');
   const [p1Choice, setP1Choice] = useState<string | null>(null);
   const [p2Choice, setP2Choice] = useState<string | null>(null);
   const [finalGame, setFinalGame] = useState<string | null>(null);
-  
+
   const [serverCreatedAt, setServerCreatedAt] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(180);
 
@@ -27,7 +30,6 @@ export default function Home() {
   const isPlayer1 = user?.id?.toString() === expectedPlayer1Id;
   const isPlayer2 = user?.username?.toLowerCase() === expectedPlayer2Name.toLowerCase();
 
-  // 1. ตรวจสอบและยืนยันสิทธิ์ Telegram WebApp ปกติ
   useEffect(() => {
     if (!isReady || !initDataRaw || !startParam) {
       if (isReady) setAuthStatus('denied');
@@ -49,7 +51,7 @@ export default function Home() {
     verifyAccess();
   }, [isReady, initDataRaw, startParam]);
 
-  // 🔄 2. Short Polling ซิงค์สถานะตรงกลางจาก Server ทุก 2 วินาที
+  // 🔄 ซิงค์สถานะและดึงค่าเวลากลางชัวร์ๆ จาก Server
   useEffect(() => {
     if (!startParam || authStatus !== 'authorized') return;
 
@@ -57,9 +59,9 @@ export default function Home() {
       try {
         const res = await fetch(`/api/match-status?gameId=${startParam}`);
         const data = await res.json();
-        
+
         if (data) {
-          setMatchState(data.matchState);
+          setMatchState(data.matchState as MatchStatusType);
           setP1Choice(data.p1Choice);
           setP2Choice(data.p2Choice);
           setFinalGame(data.finalGame);
@@ -75,8 +77,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [startParam, authStatus]);
 
-  // 🛠️ 3. ฟังก์ชันอัปเดตสถานะแมตช์ขึ้นเซิร์ฟเวอร์ (รองรับ 'expired' ในไทป์เรียบร้อย)
-  const updateMatchStateOnServer = async (newState: 'pending' | 'accepted' | 'rejected' | 'expired') => {
+  const updateMatchStateOnServer = async (newState: MatchStatusType) => {
     setMatchState(newState);
     await fetch('/api/match-status', {
       method: 'POST',
@@ -85,18 +86,22 @@ export default function Home() {
     });
   };
 
-  // ⏱️ 4. ตรวจจับเวลานับถอยหลัง 3 นาทีอ้างอิงจากเวลากลางของห้อง
+  // ⏱️ ตัวนับถอยหลัง (แก้ไขลบเงื่อนไขที่ซ้อนทับออกเพื่อไม่ให้ TypeScript แจ้ง Error)
   useEffect(() => {
-    if (!serverCreatedAt || matchState === 'expired' || !!finalGame) return;
+    const startTime = serverCreatedAt || Date.now();
+    
+    // ดักกรองสถานะจบเกมไว้ตรงนี้แล้ว
+    if (matchState === 'expired' || !!finalGame) return;
 
     const checkTimeout = () => {
       const now = Date.now();
-      const elapsedMs = now - serverCreatedAt;
-      const limit = 3 * 60 * 1000; // ล็อกเวลาตอบรับและเลือกเกมไว้ร่วมกันที่ 3 นาที
+      const elapsedMs = now - startTime;
+      const limit = 3 * 60 * 1000;
       const remaining = Math.max(0, Math.floor((limit - elapsedMs) / 1000));
       setTimeLeft(remaining);
 
-      if (elapsedMs > limit && matchState !== 'expired') {
+      // 🟢 แก้ไข: ลบ matchState !== 'expired' ออกไป เพราะ Type ถูกยืนยันจากด้านบนแล้วว่าไม่เป็นเซ็ตนี้แน่นอน
+      if (elapsedMs > limit && serverCreatedAt) {
         updateMatchStateOnServer('expired');
       }
     };
@@ -109,14 +114,13 @@ export default function Home() {
   if (authStatus === 'loading') return <LoadingScreen />;
   if (authStatus === 'denied') return <DeniedScreen />;
 
-  // หากผู้เล่นกดยอมรับสำเร็จ ให้สลับเข้าสู่หน้าต่างเลือกเกม
   if (matchState === 'accepted') {
     return (
-      <GameList 
+      <GameList
         startParam={startParam!}
-        isPlayer1={isPlayer1} 
-        isPlayer2={isPlayer2} 
-        timeLeft={timeLeft} 
+        isPlayer1={isPlayer1}
+        isPlayer2={isPlayer2}
+        timeLeft={timeLeft}
         p1Choice={p1Choice}
         p2Choice={p2Choice}
         finalGame={finalGame}

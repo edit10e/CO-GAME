@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { Bot, InlineKeyboard } from 'grammy';
 
-const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN || '');
+const token = process.env.TELEGRAM_BOT_TOKEN;
 
+if (!token) {
+  console.warn("⚠️ Warning: TELEGRAM_BOT_TOKEN is missing during build time.");
+}
+
+const bot = new Bot(token || "DUMMY_TOKEN_FOR_BUILD_PASS");
 bot.command('vs', async (ctx) => {
     try {
         if (!ctx.message || !ctx.from) {

@@ -35,7 +35,6 @@ export default function GameList({ startParam, isPlayer1, isPlayer2, timeLeft, p
     });
   };
 
-  // แอนิเมชันคำนวณเสียงโหวตเพื่อสุ่มรูเล็ตแบบเรียลไทม์
   useEffect(() => {
     if (p1Choice && p2Choice && !finalGame && !isSpinning) {
       if (p1Choice === p2Choice) {
@@ -81,22 +80,27 @@ export default function GameList({ startParam, isPlayer1, isPlayer2, timeLeft, p
 
   return (
     <main className="fixed inset-0 w-screen h-screen bg-slate-950 p-6 flex flex-col justify-center items-center font-sans text-white select-none overflow-y-auto z-40">
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-950 to-black z-0 pointer-events-none" />
+      
       <div className="w-full max-w-xs flex flex-col gap-6 z-10 text-center">
         
-        <div className="flex flex-col items-center gap-1.5">
+        {/* สไตล์เวลาตรงกลางใต้หัวข้อแบบคลีนไม่มีพื้นหลังครอบ */}
+        <div className="flex flex-col items-center gap-1">
           <h1 className="text-3xl font-black tracking-wider text-amber-400 uppercase">🎮 เลือกเกมประลอง</h1>
-          <div className="bg-slate-900/90 border border-amber-500/30 px-4 py-1.5 rounded-full font-mono text-sm text-amber-400 font-bold animate-pulse">
+          <div className="font-mono text-sm text-amber-400 font-bold animate-pulse mt-0.5">
             ⏱️ เวลาเลือกเกม: {formatTime(timeLeft)}
           </div>
         </div>
 
+        {/* ข้อความสถานะการเลือกแบบคลีน (ไม่มี Border) */}
         {(p1Choice || p2Choice) && (
-          <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl flex items-center justify-between text-[11px] font-bold text-slate-400">
+          <div className="text-[11px] font-bold text-slate-400 flex justify-between px-2">
             <div>ผู้ท้าชิง: <span className="text-red-400 font-black">{p1Choice ? GAMES_DB.find(g=>g.id===p1Choice)?.emoji : 'กำลังเลือก...'}</span></div>
             <div>คู่ต่อสู้: <span className="text-blue-400 font-black">{p2Choice ? GAMES_DB.find(g=>g.id===p2Choice)?.emoji : 'กำลังเลือก...'}</span></div>
           </div>
         )}
 
+        {/* ปุ่มเลือกเกมดั้งเดิม */}
         <div className="flex flex-col gap-3.5 w-full">
           {GAMES_DB.map((game) => {
             const isSelectedByMe = (isPlayer1 && p1Choice === game.id) || (isPlayer2 && p2Choice === game.id);
@@ -105,7 +109,7 @@ export default function GameList({ startParam, isPlayer1, isPlayer2, timeLeft, p
                 key={game.id}
                 disabled={!isParticipant || !!(isPlayer1 ? p1Choice : p2Choice) || isSpinning || !!finalGame}
                 onClick={() => handleSelectGame(game.id)} 
-                className={`w-full bg-linear-to-r from-slate-950/40 to-slate-900/80 p-5 rounded-2xl flex items-center justify-between border ${
+                className={`w-full bg-gradient-to-r from-slate-950/40 to-slate-900/80 p-5 rounded-2xl flex items-center justify-between border ${
                   isSelectedByMe ? 'border-emerald-400 bg-emerald-950/20' : 'border-slate-800/80'
                 }`}
               >
@@ -118,20 +122,21 @@ export default function GameList({ startParam, isPlayer1, isPlayer2, timeLeft, p
           })}
         </div>
 
+        {/* กล่องรายงานผลแอนิเมชันสุ่มแบบคลีนไม่มี Border รบกวนสายตา */}
         {isSpinning && currentActiveMatchGame && (
-          <div className="bg-slate-900 border-2 border-dashed border-amber-500/60 p-4 rounded-xl flex flex-col items-center justify-center gap-2">
+          <div className="py-2 flex flex-col items-center justify-center gap-1 animate-pulse">
             <span className="text-xs font-black uppercase text-amber-400 tracking-widest">🎲 เลือกต่างกัน! กำลังสุ่ม...</span>
-            <div className="text-lg font-black text-white flex items-center gap-2">
-              <span>{currentActiveMatchGame.emoji} {currentActiveMatchGame.title}</span>
+            <div className="text-lg font-black text-white">
+              {currentActiveMatchGame.emoji} {currentActiveMatchGame.title}
             </div>
           </div>
         )}
 
         {!isSpinning && finalGame && currentActiveMatchGame && (
-          <div className="bg-emerald-950/30 border border-emerald-500/40 p-4 rounded-xl flex flex-col items-center justify-center gap-2">
+          <div className="py-2 flex flex-col items-center justify-center gap-1">
             <span className="text-xs font-black text-emerald-400 tracking-widest">🚀 เริ่มเกมประลอง!</span>
-            <div className="text-base font-black text-white flex items-center gap-2">
-              <span>{currentActiveMatchGame.emoji} {currentActiveMatchGame.title}</span>
+            <div className="text-base font-black text-white">
+              {currentActiveMatchGame.emoji} {currentActiveMatchGame.title}
             </div>
           </div>
         )}
