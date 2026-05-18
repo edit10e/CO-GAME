@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { Bot, InlineKeyboard } from 'grammy';
+import { Bot, InlineKeyboard, InputFile } from 'grammy'; // 📥 เพิ่ม InputFile เข้ามา
+import fs from 'fs';                                      // 📥 เพิ่ม fs เพื่อใช้อ่านไฟล์รูปภาพ
+import path from 'path';                                  // 📥 เพิ่ม path เพื่อจัดระเบียบตำแหน่งไฟล์
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -8,6 +10,7 @@ if (!token) {
 }
 
 const bot = new Bot(token || "DUMMY_TOKEN_FOR_BUILD_PASS");
+
 bot.command('vs', async (ctx) => {
     try {
         if (!ctx.message || !ctx.from) {
@@ -24,21 +27,36 @@ bot.command('vs', async (ctx) => {
             await ctx.reply("❌ Usage: /vs @username (Please target a valid opponent!)");
             return;
         }
-        // Replace the old keyboard block inside app/api/bot/route.ts with this:
 
         const opponentUsername = match[1];
         const roomParam = `${challengerId}_${opponentUsername}`;
 
-        // This specific structure is required by Telegram to forward startapp on mobile devices
         const keyboard = new InlineKeyboard().url(
             "⚔️ เข้าสู่การแข่งขัน ",
             `https://t.me/Exposegamebot/Expose_Game?startapp=${roomParam}`
         );
-        // SWITCHED TO HTML PARSING: Cleaner, bulletproof rendering
-        await ctx.reply(
-            `🔥 <b>เกม กล้า ท้า เสียว!</b> 🔥\n\n@${challengerName} ท้าแข่งกับ @${opponentUsername}!\n\nกดเปิดเกมข้างล่างเลย👇`,
-            { reply_markup: keyboard, parse_mode: "HTML" }
-        );
+
+        // 🖼️ 1. จัดการเตรียมไฟล์รูปภาพจากโฟลเดอร์ public
+        const imagePath = path.join(process.cwd(), 'public', 'vs.jpg');
+        
+        let photoToSend: any;
+
+        // เช็กก่อนว่ามีไฟล์รูปภาพอยู่จริงไหม (กันบอทพังถ้าลืมใส่รูป หรือตอนช่วง Build time)
+        if (fs.existsSync(imagePath)) {
+            const fileBuffer = fs.readFileSync(imagePath);
+            photoToSend = new InputFile(fileBuffer, 'match.jpg'); // อัปโหลดรูปภาพผ่าน Buffer
+        } else {
+            // ถ้ารูปหาย ให้ใช้ URL รูปภาพสำรองจากอินเทอร์เน็ตแทน จะได้ไม่เกิด Error
+            photoToSend = "https://t.me/i/userpic/320/master_sig.jpg"; 
+        }
+
+        // 🚀 2. เปลี่ยนมาใช้ replyWithPhoto เพื่อส่งรูปภาพพร้อมข้อความ (caption) และปุ่มกด
+        await ctx.replyWithPhoto(photoToSend, {
+            caption: `🔥 <b>เกม กล้า ท้า!</b> 🔥\n\n@${challengerName} ท้าแข่งกับ @${opponentUsername}!\n\nกดเปิดเกมข้างล่างเลย👇`,
+            reply_markup: keyboard,
+            parse_mode: "HTML"
+        });
+
     } catch (error) {
         console.error("Telegram bot runtime script issue:", error);
     }
@@ -48,11 +66,17 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        if (!bot.isInited()) {
+        // ⚠️ เพิ่มการดักตรงนี้: ป้องกันบอทพังตอนสั่ง npm run build 
+        // เนื่องจากตอนบิวด์ไม่มี Token จริง บอทจะเรียก .init() ไม่ผ่าน
+        if (token && !bot.isInited()) {
             await bot.init();
         }
 
-        await bot.handleUpdate(body);
+        // ถ้าเป็น Token ปลอมตอนบิวด์ ไม่ต้องให้แฮนเดิลอัปเดต
+        if (token) {
+            await bot.handleUpdate(body);
+        }
+        
         return NextResponse.json({ ok: true }, { status: 200 });
     } catch (error) {
         console.error("Webhook route crash:", error);
