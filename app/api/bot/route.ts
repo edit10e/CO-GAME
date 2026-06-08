@@ -1,3 +1,4 @@
+// app/api/bot/route.ts
 import { NextResponse } from 'next/server';
 import { Bot, InlineKeyboard, InputFile } from 'grammy';
 import fs from 'fs';
@@ -62,7 +63,7 @@ bot.command('vs', async (ctx) => {
     }
 });
 
-// ==========================================
+// ===============================Í===========
 // 2. ระบบดักจับ รูปภาพ/วิดีโอ/GIF และลบอัตโนมัติใน 60 วินาที (ทำงานทันทีไม่ต้องพิมพ์ข้อความ)
 // ==========================================
 bot.on(['message:photo', 'message:video', 'message:animation'], async (ctx) => {
@@ -70,28 +71,31 @@ bot.on(['message:photo', 'message:video', 'message:animation'], async (ctx) => {
         const chatId = ctx.chat.id;
         const mediaMessageId = ctx.message.message_id;
 
-        // 🚀 ส่งข้อความเตือนทันทีที่ผู้ใช้ส่งภาพ/วิดีโอ/GIF เข้ามา โดยไม่ต้องเช็ก @ อีกต่อไป
-        const noticeMessage = await ctx.reply("⏳ มีเดียนี้จะถูกลบอัตโนมัติภายใน 60 วินาที...", {
-            reply_to_message_id: mediaMessageId
-        });
+        // Get sender's username or fall back to first_name
+        const sender = ctx.from?.username
+            ? `@${ctx.from.username}`
+            : ctx.from?.first_name ?? 'คุณ';
 
-        // ⏱️ ตั้งเวลาลบแยกชิ้นรายข้อความ (60 วินาที)
+        // Reply immediately with the sender's name tagged
+        const noticeMessage = await ctx.reply(
+            `⏳ ${sender} รูปของคุณจะถูกลบในอีก 60 วินาที...`,
+            { reply_to_message_id: mediaMessageId }
+        );
+
+        // Each media message gets its own independent timer
         setTimeout(async () => {
             try {
-                // ลบตัวไฟล์มีเดีย (รูปภาพ/วิดีโอ/GIF)
                 await ctx.api.deleteMessage(chatId, mediaMessageId);
             } catch (err) {
-                console.error("Failed to delete media file:", err);
+                console.error("Failed to delete media:", err);
             }
-
             try {
-                // ลบข้อความแจ้งเตือนของบอทออกไปด้วย
                 await ctx.api.deleteMessage(chatId, noticeMessage.message_id);
             } catch (err) {
-                console.error("Failed to delete notice message:", err);
+                console.error("Failed to delete notice:", err);
             }
-        }, 60000); // 60000 มิลลิวินาที = 60 วินาที
-        
+        }, 60000);
+
     } catch (error) {
         console.error("Error in auto-delete media function:", error);
     }
